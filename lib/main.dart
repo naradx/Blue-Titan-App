@@ -2,22 +2,20 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase with your configuration
   try {
     await Firebase.initializeApp();
   } catch (e) {
     print("Firebase initialization failed: $e");
-    // Optionally, show an error UI or exit gracefully
     return;
   }
   runApp(MyApp());
@@ -37,7 +35,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// LoginPage Widget with only Google Sign-In
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -52,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
     });
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return; // User canceled the sign-in
+      if (googleUser == null) return;
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
@@ -76,9 +73,9 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          color: Color(0xFF4A2C2A), // Brown background
+          color: Color(0xFF4A2C2A),
           image: DecorationImage(
-            image: AssetImage('assets/ss01.png'), // Ensure this asset exists
+            image: AssetImage('assets/ss01.png'),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
               Colors.black.withOpacity(0.2),
@@ -97,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFFFA500), // Orange color for "Login"
+                    color: Color(0xFFFFA500),
                     letterSpacing: 2.0,
                   ),
                 ),
@@ -111,13 +108,13 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   child: Column(
                     children: [
-                      SizedBox(height: 50), // Placeholder space
+                      SizedBox(height: 50),
                       SizedBox(
                         width: double.infinity,
                         height: 60,
                         child: OutlinedButton.icon(
                           onPressed: _signInWithGoogle,
-                          icon: Icon(Icons.login, color: Color(0xFFFFA500)), // Temporary icon
+                          icon: Icon(Icons.login, color: Color(0xFFFFA500)),
                           label: Text(
                             'Sign in with Google',
                             style: TextStyle(color: Color(0xFFFFA500)),
@@ -143,7 +140,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-// MusicHomePage Widget
 class MusicHomePage extends StatefulWidget {
   @override
   _MusicHomePageState createState() => _MusicHomePageState();
@@ -215,6 +211,15 @@ class _MusicHomePageState extends State<MusicHomePage> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _launchURL() async {
+    final Uri url = Uri.parse('https://blue-titans-web-app.vercel.app');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not launch URL')),
+      );
     }
   }
 
@@ -299,9 +304,9 @@ class _MusicHomePageState extends State<MusicHomePage> {
                 SizedBox(height: 20),
                 _buildButton("Analyze Now", FontAwesomeIcons.drum, Colors.orange.shade300, isLarge: true, onPressed: _analyzeSong),
                 SizedBox(height: 15),
-                _buildButton("Synthesis", FontAwesomeIcons.waveSquare, Colors.orange.shade400, isLarge: true, onPressed: () {}),
+                _buildButton("Synthesis", FontAwesomeIcons.waveSquare, Colors.orange.shade400, isLarge: true, onPressed: _launchURL),
                 SizedBox(height: 15),
-                _buildButton("Practice", FontAwesomeIcons.guitar, Colors.orange.shade500, isLarge: true, onPressed: () {}),
+                _buildButton("Train with AI", FontAwesomeIcons.guitar, Colors.orange.shade500, isLarge: true, onPressed: () {}),
                 SizedBox(height: 20),
                 if (isLoading)
                   CircularProgressIndicator(color: Colors.orange.shade600)

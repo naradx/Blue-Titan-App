@@ -48,6 +48,7 @@ firebase_core: ^2.24.0
 firebase_auth: ^4.15.0
 google_sign_in: ^6.1.0
 firebase_storage: ^11.5.0
+url_launcher: ^6.2.5
 
   
 
