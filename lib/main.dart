@@ -150,6 +150,7 @@ class _MusicHomePageState extends State<MusicHomePage> {
   String? selectedFilePath;
   bool isLoading = false;
   String? analysisResult;
+  Map<String, dynamic>? analysisDetails;
 
   Future<void> _pickMp3File() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -161,6 +162,9 @@ class _MusicHomePageState extends State<MusicHomePage> {
       setState(() {
         selectedSong = result.files.single.name;
         selectedFilePath = result.files.single.path;
+        // Clear previous results when selecting a new file
+        analysisResult = null;
+        analysisDetails = null;
       });
     } else {
       setState(() {
@@ -179,6 +183,7 @@ class _MusicHomePageState extends State<MusicHomePage> {
     setState(() {
       isLoading = true;
       analysisResult = null;
+      analysisDetails = null;
     });
 
     try {
@@ -196,7 +201,11 @@ class _MusicHomePageState extends State<MusicHomePage> {
       if (streamedResponse.statusCode == 200) {
         var jsonResponse = jsonDecode(responseData);
         setState(() {
-          analysisResult = jsonResponse['message'] ?? "Analysis Complete!";
+          analysisResult = jsonResponse['message'];
+          // Parse the results object
+          if (jsonResponse.containsKey('results')) {
+            analysisDetails = jsonResponse['results'];
+          }
         });
       } else {
         setState(() {
@@ -311,15 +320,90 @@ class _MusicHomePageState extends State<MusicHomePage> {
                 if (isLoading)
                   CircularProgressIndicator(color: Colors.orange.shade600)
                 else if (analysisResult != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      analysisResult!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Analysis Results",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            SizedBox(height: 15),
+                            Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.7),
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(
+                                  color: Colors.orange.shade400,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    analysisResult!,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.orange.shade300,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  SizedBox(height: 20),
+                                  if (analysisDetails != null) ...[
+                                    _buildAnalysisItem("Genre", analysisDetails!['genre'] ?? "Unknown"),
+                                    _buildAnalysisItem("Taal", analysisDetails!['taal'] ?? "Unknown"),
+                                    _buildAnalysisItem(
+                                      "Tonic", 
+                                      analysisDetails!['tonic'] != null ? analysisDetails!['tonic'] : "Not detected"
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalysisItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "$label:",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.orange.shade200,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
